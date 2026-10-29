@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: magazin-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-magazin}
+      POSTGRES_USER: ${POSTGRES_USER:-magazin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      TZ: Asia/Tashkent
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - magazin_pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-magazin} -d ${POSTGRES_DB:-magazin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  magazin_pgdata:
