@@ -1,0 +1,29 @@
+name: Database Schema CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  validate-schema:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: magazin
+          POSTGRES_USER: magazin
+          POSTGRES_PASSWORD: test-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U magazin -d magazin"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply schema to clean database
+        env:
+          PGPASSWORD: test-only-password
+        run: psql -h localhost -U magazin -d magazin -v ON_ERROR_STOP=1 -f db/schema.sql
